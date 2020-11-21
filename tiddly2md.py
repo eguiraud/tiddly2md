@@ -50,6 +50,8 @@ def wiki_to_md(text):
         line = re.sub("\\[\\[(.*)\\|(.*)\\]\\]", "[\\1](\\2)", line)
         # Code
         line = re.sub("\\{\\{\\{(.*?)\\}\\}\\}", "`\\1`", line)
+        # Things that might look like tags
+        line = re.sub("^#", " #", line)
         # Footnotes
         match = re.search("```(.*)```", line)
         if match:
@@ -73,8 +75,20 @@ def sanitize(value):
     return value.replace('/', '_')
 
 
-def main(args):
+def parse_tags(tags):
+    parsed_tags = tags
+    if parsed_tags == "nan":
+        return ""
+    for match in re.findall('\[\[.+?\]\]', tags):
+        parsed_tags = parsed_tags.replace(match, match.replace(' ', '_'))
+    parsed_tags = parsed_tags.replace('[', '').replace(']', '')
+    output = ''
+    for tag in parsed_tags.split(' '):
+        output += f'#{tag}\n'
+    return output
 
+
+def main(args):
     output_path = args.outdir
     try:
         os.mkdir(output_path)
@@ -85,12 +99,22 @@ def main(args):
     if args.tags:
         df = df[df.tags.apply(lambda x: good_tag(x, args.tags))]
 
+    image_ext_dict = {'image/jpeg' : 'jpg', 'image/png' : 'png', 'image/svg+xml' : 'svg' }
+
     for row_id, row in df.iterrows():
         filename = f'{sanitize(row.title)}.md'
         with open(os.path.join(output_path, filename), 'w') as f:
             try:
-                f.write(wiki_to_md(row.text))
-            except:
+                f.write(f'# {row.title}\n')
+                f.write('\n')
+                f.write(parse_tags(str(row.tags)))
+                f.write('\n')
+                if row.type.startswith("image/"):
+                    f.write(f'![]({row.title}.{image_ext_dict[row.type]})')
+                else:
+                    f.write(wiki_to_md(row.text))
+            except Exception as e:
+                print(f"Error writing {filename}: ", e)
                 f.write('')
 
 
