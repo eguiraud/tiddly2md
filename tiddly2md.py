@@ -1,11 +1,9 @@
 #!/bin/env python
-# coding: utf-8
+# -*- coding: utf-8 -*-
 
-from __future__ import print_function
 import argparse
 import re
 import os
-import unicodedata
 import sys
 
 import pandas as pd
@@ -33,7 +31,7 @@ def wiki_to_md(text):
     fn = []
     new_text = []
     fn_n = 1  # Counter for footnotes
-    for line in text.split('\n'):
+    for line in str(text).split('\n'):
         # Replace wiki headers with markdown headers
         match = re.match('(!+)(\\s?)[^\\[]', line)
         if match:
@@ -72,10 +70,7 @@ def sanitize(value):
 
     :param value: string
     """
-    value = unicode(value)
-    value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore')
-    value = unicode(re.sub('[^\w\s-]', '', value).strip())
-    return value
+    return value.replace('/', '_')
 
 
 def main(args):
@@ -91,8 +86,7 @@ def main(args):
         df = df[df.tags.apply(lambda x: good_tag(x, args.tags))]
 
     for row_id, row in df.iterrows():
-        filename = sanitize(row.title)
-        filename = '{}.{}'.format(filename, args.ext)
+        filename = f'{sanitize(row.title)}.md'
         with open(os.path.join(output_path, filename), 'w') as f:
             try:
                 f.write(wiki_to_md(row.text))
