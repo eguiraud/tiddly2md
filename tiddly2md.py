@@ -93,22 +93,15 @@ def main(args):
             except:
                 f.write('')
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(
-        description="Convert TiddlyWiki tiddlers exported as CSV to "
-                    "individual files.")
-    parser.add_argument('--ext', '-e', dest='ext',
-                        default='md',
-                        help='File extension (defaults to "md")')
-    parser.add_argument('--outdir', '-o',
-                        default='output',
-                        dest='outdir',
-                        help='Output folder (defaults to "output")')
-    parser.add_argument('--tags', '-t', dest='tags',
-                        action='append',
-                        help='Valid tag to export, can have multiple')
-    parser.add_argument('input_file',
-                        help='Exported CSV file')
-    args = parser.parse_args()
 
-    sys.exit(main(args))
+def parse_args():
+    parser = argparse.ArgumentParser(description="Convert TiddlyWiki tiddlers exported as CSV to individual files.")
+    parser.add_argument('--outdir', '-o', default='output', dest='outdir', help='Output folder (defaults to "output")')
+    parser.add_argument('--tags', '-t', dest='tags', action='append', help='Valid tag to export, can have multiple')
+    parser.add_argument('input_file', help='Exported CSV file')
+    return parser.parse_args()
+
+
+if __name__ == '__main__':
+    args = parse_args()
+    main(args)
